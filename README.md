@@ -6,7 +6,7 @@ This is a Python script to export Spotify playlists to [XSPF](http://www.xspf.or
 [pyspotify](https://github.com/mopidy/pyspotify) which in turn relies on
 [libspotify](https://developer.spotify.com/technologies/libspotify/), this
 requires that you have a Spotify Premium account, and an API key in the form of
-a ''spotify_appkey.key'' file in the working directory.
+a *spotify_appkey.key* file in the working directory.
 
 This will export one playlist per XSPF file. It optionally preserves the
 playlist folders by placing the XSFP files in a directory structure that
