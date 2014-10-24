@@ -14,6 +14,7 @@ mirrors the playlist folders.
 
 Known issues:
 - This has been tested only with Python 3.x so far.
+- This has also only been tested with pyspotify 2.x.
 - The script will occasionally fail because the Spotify API is returning None
 instead of a proper object.
 - This does not yet support the proxy login options that pyspotify exposes.
