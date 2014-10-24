@@ -28,15 +28,15 @@ def processContainer(plCont):
     count = len(plCont)
     for idx,pl in enumerate(plCont):
         print("Loading %d of %d..." % (idx + 1, count))
-        if type(pl) is spotify.playlist.Playlist:
+        if type(pl) is spotify.Playlist:
             _ = pl.load()
             tree = ET.ElementTree(generateXspf(pl))
             yield (pl.name, folder, tree)
-        elif type(pl) is spotify.playlist_container.PlaylistFolder:
-            if pl.type == spotify.playlist_container.PlaylistType.START_FOLDER:
+        elif type(pl) is spotify.PlaylistFolder:
+            if pl.type == spotify.PlaylistType.START_FOLDER:
                 folder.append(pl.name)
                 #recurseContainer(pl, level + 1, folder)
-            elif pl.type == spotify.playlist_container.PlaylistType.END_FOLDER:
+            elif pl.type == spotify.PlaylistType.END_FOLDER:
                 folder.pop()
             else:
                 print("Unknown playlist type %s, %s" % (type(pl), pl))
@@ -84,7 +84,10 @@ def generateXspf(playlist):
         # Is anything proper for 'identifier'? MusicBrainz?
         trackSub('title', track.name)
         trackSub('creator', ",".join([a.name for a in track.artists]))
-        album = '%s - %s (%s)' % (track.album.artist.name, track.album.name, track.album.year)
+        if track.album:
+            album = '%s - %s (%s)' % (track.album.artist.name, track.album.name, track.album.year)
+        else:
+            album = ''
         trackSub('album', album)
         # What do I do with other album metadata? Album art?
         trackSub('trackNum', track.index)
@@ -115,22 +118,19 @@ def main(argv):
     # Log in to Spotify and get a session
     # Code from: http://pyspotify.mopidy.com/en/latest/quickstart/
     logged_in_event = threading.Event()
-    def logged_in_listener(session, error_type):
-        logged_in_event.set()
+    def connection_state_listener(session):
+        if session.connection.state is spotify.ConnectionState.LOGGED_IN:
+            logged_in_event.set()
     session = spotify.Session()
     loop = spotify.EventLoop(session)
     loop.start()
-    session.on(spotify.SessionEvent.LOGGED_IN, logged_in_listener)
+    session.on(spotify.SessionEvent.CONNECTION_STATE_UPDATED,
+               connection_state_listener)
+
     session.login(args.username, args.password)
-    session.connection_state
+    print("Logging in %s..." % (session.user,))
     logged_in_event.wait()
     
-    # TODO: Is there some better way to do this?
-    print("Waiting to log in %s..." % (session.user,))
-    while (session.connection_state != spotify.ConnectionState.LOGGED_IN):
-        time.sleep(0.01)
-    print("Logged in.")
-
     # Get the playlist container:
     _ = session.playlist_container.load()
 
